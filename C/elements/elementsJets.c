@@ -161,6 +161,24 @@ static uint_fast16_t obsolete_lockDuration(const elementsTransaction* tx) {
   return 2 <= tx->version ? tx->obsolete_lockDuration : 0;
 }
 
+/* Maps a taproot leaf version to a monotonic Simplicity version ordinal.
+ * 0xbe -> 1 (initial Simplicity version)
+ * 0xc2 -> 2 (added output jets)
+ * Unknown versions map to 0.
+ */
+static unsigned char simplicity_version_ordinal(unsigned char leaf_version) {
+  switch (leaf_version) {
+    case 0xbe: return 1;
+    case 0xc2: return 2;
+    default:   return 0;
+  }
+}
+
+/* Returns true if the taproot environment's Simplicity version is >= min_version. */
+static bool from_simplicity_version(const elementsTapEnv* taproot, unsigned char min_version) {
+  return simplicity_version_ordinal(taproot->leafVersion) >= min_version;
+}
+
 static bool isFee(const sigOutput* output) {
   /* As specified in https://github.com/ElementsProject/elements/blob/de942511a67c3a3fcbdf002a8ee7e9ba49679b78/src/primitives/transaction.h#L304-L307. */
   return output->emptyScript && EXPLICIT == output->asset.prefix && EXPLICIT == output->amt.prefix;
@@ -485,6 +503,7 @@ bool simplicity_output_null_datum(frameItem* dst, frameItem src, const txEnv* en
 
 /* output_null_get_8 : TWO^32 * TWO^32 |- S (S TWO^64) */
 bool simplicity_output_null_get_bytes_8(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
@@ -502,6 +521,7 @@ bool simplicity_output_null_get_bytes_8(frameItem* dst, frameItem src, const txE
 
 /* output_null_get_1 : TWO^32 * TWO^32 |- S (S TWO^8) */
 bool simplicity_output_null_get_bytes_1(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
@@ -519,6 +539,7 @@ bool simplicity_output_null_get_bytes_1(frameItem* dst, frameItem src, const txE
 
 /* output_null_get_2 : TWO^32 * TWO^32 |- S (S TWO^16) */
 bool simplicity_output_null_get_bytes_2(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
@@ -536,6 +557,7 @@ bool simplicity_output_null_get_bytes_2(frameItem* dst, frameItem src, const txE
 
 /* output_null_get_4 : TWO^32 * TWO^32 |- S (S TWO^32) */
 bool simplicity_output_null_get_bytes_4(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
@@ -553,6 +575,7 @@ bool simplicity_output_null_get_bytes_4(frameItem* dst, frameItem src, const txE
 
 /* output_null_get_16 : TWO^32 * TWO^32 |- S (S TWO^128) */
 bool simplicity_output_null_get_bytes_16(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
@@ -570,6 +593,7 @@ bool simplicity_output_null_get_bytes_16(frameItem* dst, frameItem src, const tx
 
 /* output_null_get_32 : TWO^32 * TWO^32 |- S (S TWO^256) */
 bool simplicity_output_null_get_bytes_32(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
@@ -587,6 +611,7 @@ bool simplicity_output_null_get_bytes_32(frameItem* dst, frameItem src, const tx
 
 /* output_null_get_64 : TWO^32 * TWO^32 |- S (S TWO^512) */
 bool simplicity_output_null_get_bytes_64(frameItem* dst, frameItem src, const txEnv* env) {
+  if (!from_simplicity_version(env->taproot, 2)) return false;
   uint_fast32_t i = simplicity_read32(&src);
   if (writeBit(dst, i < env->tx->numOutputs && env->tx->output[i].isNullData)) {
     uint_fast32_t j = simplicity_read32(&src);
